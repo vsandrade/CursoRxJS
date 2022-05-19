@@ -7,6 +7,7 @@
     "prod": "NODE_ENV=production webpack --progress --watch"
   },
   "dependencies": {
+    "rxjs": "^7.5.5"
   },
   "devDependencies": {
     "ts-loader": "^9.3.0",
