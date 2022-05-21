@@ -1,4 +1,4 @@
-import {Observable, Observer } from "rxjs";
+import { Observable, map, filter } from 'rxjs'
 
 let numbers = [1,5,10];
 let source = new Observable(subscriber => {
@@ -8,14 +8,17 @@ let source = new Observable(subscriber => {
         subscriber.next(numbers[index++]);
 
         if (index < numbers.length) {
-            setTimeout(produceValue, 2000);
+            setTimeout(produceValue, 250);
         } else {
             subscriber.complete();
         }
     }
 
     produceValue();
-});
+}).pipe(
+    map((n: number) => n * 2),
+    filter((n: number) => n > 4)
+)
 
 source.subscribe({
     next: (value: Object) => console.log(value),
