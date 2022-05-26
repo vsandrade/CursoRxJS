@@ -1,4 +1,5 @@
-import { switchMap, mergeMap, fromEvent, Observable } from 'rxjs';
+import { mergeMap, fromEvent, Observable } from 'rxjs';
+import { retry, retryWhen, scan, delay, takeWhile } from 'rxjs/operators';
 
 interface IMovie {
     title: string;
@@ -14,14 +15,33 @@ function load(url: string): Observable<any> {
         let xhr = new XMLHttpRequest();
 
         xhr.addEventListener('load', () => {
-            let data = JSON.parse(xhr.responseText);
-            subscriber.next(data)
-            subscriber.complete();
+            if (xhr.status === 200) {
+                let data = JSON.parse(xhr.responseText);
+                subscriber.next(data);
+                subscriber.complete();
+            } else {
+                subscriber.error(xhr.statusText);
+            }
         });
 
         xhr.open('GET', url);
         xhr.send();
-    })
+    }).pipe(
+        retryWhen(retryStrategy({attempts: 4, timeDelay: 1000}))
+    )
+}
+
+function retryStrategy({attempts = 4, timeDelay = 1000}) {
+    return (errors: Observable<any>) => {
+        return errors.pipe(
+            scan((acc, value) => {
+                console.log(acc, value);
+                return acc + 1;
+            }),
+            takeWhile(acc => acc < attempts),
+            delay(timeDelay)
+        )
+    }
 }
 
 function renderMovies(movies: IMovie[]) {
